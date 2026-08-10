@@ -563,6 +563,13 @@ export class ChatPanel implements vscode.Disposable {
         } else if (delta && typeof delta === 'object') {
           Object.assign(payloadOut, delta);
         }
+        // Carry the model-call prompt / output so the webview can show what was
+        // sent to the LLM alongside the answer.
+        if (eventType === 'chat.llm_call_start' && typeof body.prompt === 'string' && body.prompt.trim()) {
+          payloadOut.prompt = body.prompt;
+        } else if (eventType === 'chat.llm_call_end' && typeof body.content === 'string' && body.content.trim()) {
+          payloadOut.content = body.content;
+        }
         if (body.member_name) payloadOut.member_name = body.member_name as string;
         return { event_type: eventType, request_id: requestId, payload: payloadOut };
       }
