@@ -2,28 +2,9 @@
 
 The JiuwenSwarm plugin embeds an autonomous multi-agent AI coding assistant directly into PyCharm, IntelliJ IDEA, WebStorm, GoLand, and every other JetBrains IDE (2023.1+). The panel lives in a docked tool window, streams responses token-by-token, and integrates with the editor through diff review, terminal integration, file-link navigation, and the Alt+Enter quick-fix menu.
 
-## Prerequisites
-
-JiuwenSwarm must be running locally before the plugin connects:
-
-```bash
-jiuwenswarm-start
-# WebSocket server opens at ws://127.0.0.1:19000/ws
-```
-
-JCEF (Chromium Embedded Framework) must be enabled. If the panel shows blank on first open, enable it via **Help → Find Action → Registry** → `ide.browser.jcef.enabled`, then restart the IDE.
-
 ## Installation
 
-### From ZIP (recommended)
-
-1. Download `jiuwenswarm-plugin-0.1.0.zip` from the [releases page](https://github.com/jiuwencortex/jiuwenswarm-ide/releases).
-2. Go to **Settings → Plugins → ⚙ → Install Plugin from Disk** and select the ZIP.
-3. Restart the IDE.
-
-### From Marketplace
-
-Search **JiuwenSwarm** in **Settings → Plugins → Marketplace** and click Install.
+See [JetBrainsInstall.md](JetBrainsInstall.md) for prerequisites and installation instructions.
 
 ## Configuration
 
@@ -154,7 +135,7 @@ The panel has three views, switched from the **Map / List / Board** toggle in th
 | Debug console | ☰ menu → **Debug log** (closed by default): live team-event and tool-attribution log with Clear/Copy |
 | Summary card | Replaces lanes when all workers finish: agent count, tasks completed, messages, per-agent durations |
 
-See [USER_GUIDE.md — Swarm Map](USER_GUIDE.md#swarm-map) for the full reference.
+See [JetBrainsGuide.md — Swarm Map](JetBrainsGuide.md#swarm-map) for the full reference.
 
 ## Alt+Enter Quick Fix
 

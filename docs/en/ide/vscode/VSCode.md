@@ -2,26 +2,9 @@
 
 The JiuwenSwarm extension embeds an autonomous multi-agent AI coding assistant directly into Visual Studio Code. The panel runs in the Activity Bar sidebar, streams responses token-by-token, and integrates with the editor through file edits, terminal integration, file-link navigation, and the lightbulb quick-fix menu.
 
-## Prerequisites
-
-JiuwenSwarm must be running locally before the extension connects:
-
-```bash
-jiuwenswarm-start
-# WebSocket server opens at ws://localhost:19000/ws
-```
-
 ## Installation
 
-### From VSIX
-
-1. Download `jiuwenswarm-0.1.0.vsix` from the [releases page](https://github.com/jiuwencortex/jiuwenswarm-ide/releases).
-2. In VS Code, go to **Extensions → ⋯ → Install from VSIX** and select the file.
-3. The JiuwenSwarm icon appears in the Activity Bar.
-
-### From Marketplace
-
-Search **JiuwenSwarm** in **Extensions → Marketplace** and click Install.
+See [VSCodeInstall.md](VSCodeInstall.md) for prerequisites and installation instructions.
 
 ## Configuration
 
@@ -142,7 +125,7 @@ The panel has three views, switched from the **Map / List / Board** toggle in th
 | Debug console | ☰ menu → **Debug log** (closed by default): live team-event and tool-attribution log with Clear/Copy |
 | Summary card | Replaces lanes when all workers finish: agent count, tasks completed, messages, per-agent durations |
 
-See [USER_GUIDE.md — Swarm Map](USER_GUIDE.md#swarm-map) for the full reference.
+See [VSCodeGuide.md — Swarm Map](VSCodeGuide.md#swarm-map) for the full reference.
 
 ## Code Action Quick Fix
 

@@ -1,40 +1,39 @@
-# JiuwenSwarm VS Code 扩展 —— 使用指南
+# JiuwenSwarm JetBrains 插件 —— 使用指南
 
-每个设置、面板元素和工作流的完整参考。安装说明见 [README.md](README.md)。
+每个设置、面板元素和工作流的完整参考。安装说明见 [JetBrains插件.md](JetBrains插件.md)。
 
 ---
 
 ## 配置
 
-打开 **设置 → 扩展 → JiuwenSwarm**（或在设置编辑器中搜索 `jiuwenswarm`）：
+打开 **设置 → 工具 → JiuwenSwarm**。
 
 | 设置项 | 默认值 | 说明 |
 |---|---|---|
-| `jiuwenswarm.host` | `127.0.0.1` | JiuwenSwarm WebSocket 服务器的主机名或 IP |
-| `jiuwenswarm.port` | `19000` | 端口——连接 `ws://host:port/ws` |
-| `jiuwenswarm.channelId` | `ide` | 服务器日志和追踪中显示的客户端标识 |
-| `jiuwenswarm.autoConnect` | `true` | VS Code 启动时打开 WebSocket |
-| **`jiuwenswarm.defaultMode`** | `code.plan` | 模式选择器声明的默认模式（`code.plan` / `code.normal` / `code.team`）。聊天面板始终从**计划与执行**开始；通过模式胶囊按会话切换。 |
-| `jiuwenswarm.approveEdits` | `false` | 应用任何智能体文件编辑前要求明确批准 |
-| `jiuwenswarm.runCommandsInTerminal` | `true` | 在 JiuwenSwarm 终端中运行 `bash` / `run_command` 工具调用，以便查看实时输出 |
-| `jiuwenswarm.useDiffViewer` | `false` | 应用每个文件编辑前在 VS Code 内置 diff 查看器中展示，并询问**接受 / 拒绝** |
-| `jiuwenswarm.loadHistoryOnSwitch` | `true` | 切换到已有会话时获取并显示历史消息 |
-| `jiuwenswarm.keepAlive.enabled` | `true` | 发送周期 WebSocket ping 帧以保持连接并尽早检测断开 |
-| `jiuwenswarm.keepAlive.interval` | `30` | 保活 ping 的间隔秒数（5–300） |
-| `jiuwenswarm.rewindEnabled` | `true` | 在智能体编辑前快照文件；每轮后显示回退栏 |
-| `jiuwenswarm.projectTree.enabled` | `true` | 在每条消息前附加工作区根目录的 2 层目录列表 |
-| `jiuwenswarm.projectTree.maxFiles` | `200` | 项目树列表的最大条目数（10–2000） |
-| `jiuwenswarm.gitEnabled` | `false` | 在消息列表下方显示**提交** / **推送**按钮（需要 git 仓库） |
+| 服务器主机 | `127.0.0.1` | JiuwenSwarm WebSocket 服务器的主机名或 IP |
+| 服务器端口 | `19000` | 端口——连接 `ws://host:port/ws` |
+| 频道 ID | `ide` | 服务器日志和追踪中显示的客户端标识 |
+| 启动时连接 | 开 | IDE 启动时打开 WebSocket |
+| **默认模式** | `code.plan` | 创建新会话时应用的模式（计划与执行 / 执行 / 团队编码）。每次连接时应用到 UI，并可由模式选择器按会话覆盖。 |
+| 自动应用文件编辑 | 关 | 立即应用智能体文件编辑，不打开 diff 审查窗口 |
+| 编辑前要求批准 | 关 | 应用任何智能体文件编辑前显示确认提示 |
+| 在 IDE 终端中运行命令 | 开 | 将智能体 shell 命令路由到专用的 JiuwenSwarm 终端标签页 |
+| 保活 ping | 开 | 发送周期 WebSocket ping 帧以防止服务器端超时 |
+| 保活间隔 | 30 秒 | ping 之间的秒数（5–300） |
+| 包含项目树 | 开 | 在每条消息前附加项目根目录的 2 层目录列表 |
+| 项目树最大文件数 | 200 | 树列表中的最大文件条目数（10–2000） |
+| 切换会话时加载历史 | 开 | 切换到已有会话后获取并显示历史消息 |
+| **启用检查点 / 回退** | 开 | 在智能体编辑前快照文件；每轮结束时显示回退栏 |
+| **Git 快捷操作** | 关 | 在消息列表下方显示提交和推送按钮 |
 
-连接设置（host、port、channel ID、auto-connect、keep-alive）在扩展激活时读取；更改它们会提示
-你重新加载窗口。行为开关（批准、diff 查看器、终端、回退、项目树、git）在使用时实时生效。
+设置存储在 IDE 配置目录下的 `jiuwenswarm.xml` 中，重启后保留。
 
 ---
 
 ## 打开面板
 
-从命令面板打开 **JiuwenSwarm: 打开聊天**，或按 **Ctrl+Shift+J** / **⌘⇧J**。面板作为 webview
-面板在当前编辑器旁打开，可拖到任意编辑器组中。
+点击右侧边栏工具窗口中的 **JiuwenSwarm**。面板作为停靠的 JCEF（嵌入式 Chromium）工具窗口
+打开，可像任何其他工具窗口一样调整大小、移动或悬浮。
 
 首次连接时自动创建一个会话。页头显示会话标题和实时连接状态。
 
@@ -48,7 +47,7 @@
 
 | 元素 | 说明 |
 |---|---|
-| 状态点 | 首次连接前为灰色，之后绿色 = 已连接，黄色（脉动）= 重连中，红色 = 已断开。断开后如需重连，点击状态栏项（`$(circle-slash) JiuwenSwarm`）或使用**新建**。 |
+| 状态点 | 首次连接前为灰色，之后绿色 = 已连接，黄色（脉动）= 重连中，红色 = 已断开。断开后如需重连，点击状态栏部件（`○ JiuwenSwarm`）或使用**新建**。 |
 | 会话标题 | 活动会话的名称 |
 | **新建**按钮 | 开始新会话：重连 WebSocket 并清空消息列表 |
 | **⚙** 菜单 | 会话、技能、主题（自动/深色/浅色）、调试日志 |
@@ -65,8 +64,8 @@
 | **执行** | `code.normal` | 智能体不经计划阶段直接编辑文件并运行命令。适合清晰、范围受限的任务。 |
 | **团队编码** | `code.team` | 主智能体将任务拆分为并行子任务，并同时分配给专家智能体。适合大型可分解的工作。 |
 
-点击模式胶囊打开下拉框。如果当前会话已有消息，切换模式会要求确认并开始新会话。模式胶囊
-从**计划与执行**开始。
+点击模式胶囊打开下拉框。如果当前会话已有消息，切换模式会要求确认并开始新会话。启动时应用的
+默认模式来自 **设置 → 默认模式**。
 
 ---
 
@@ -90,11 +89,12 @@
 **`@` — 文件提及**
 
 输入 `@` 后跟部分文件名可搜索工作区文件。选择文件会在消息中插入 `@relative/path/to/file`。
-发送时，扩展读取该文件并在带围栏代码块的上下文中包含其完整内容。
+发送时，插件读取该文件并在带围栏代码块的上下文中包含其完整内容。
 
 **`#` — 技能选择器**
 
 输入 `#` 可看到所有已注册技能。继续输入可按名称过滤。选择技能会在消息中插入 `#skill-name`。
+此处列出的技能与技能浮层中显示的相同。
 
 **`!` — 预设提示**
 
@@ -149,37 +149,39 @@
 - **成本** —— 估算的美元成本（服务器报告定价时显示）
 - **TODO** —— 智能体实时待办进度（✓ 已完成 / ◐ 进行中 / ☐ 待办），当智能体报告时显示
 
+每个完成轮次的页脚显示该轮的 token 数、工具调用、错误类别和耗时。
+
 统计栏右侧的条形图图标（两轮或更多轮后出现）切换**迷你图表**——每轮 token 和耗时的条形图。
 悬停条形可查看该轮详情。
 
-**服务器内存**片显示 JiuwenSwarm 服务器的实时内存占用（RSS 总量与可用量），每 10 秒轮询。
-
-底部输入区中的**上下文栏**显示活动模型上下文窗口的占用程度（0–100%）。超过 60% 变橙，
+面板底部输入区中的**上下文栏**显示活动模型上下文窗口的占用程度（0–100%）。超过 60% 变橙，
 超过 80% 变红；上下文接近服务器的自动压缩阈值时会出现告警片。
+
+**服务器内存**片显示 JiuwenSwarm 服务器的实时内存占用（RSS 总量与可用量），每 10 秒轮询。
 
 ---
 
 ## IDE 上下文注入
 
-每条消息都前置一个结构化上下文块。智能体会把它视为你消息的一部分。
+每条消息在发送前都前置一个结构化上下文块。智能体会把它视为你消息的一部分——无需手动复制粘贴。
 
 ### 注入内容
 
 | 字段 | 来源 |
 |---|---|
-| 活动文件路径与语言 | `vscode.window.activeTextEditor` + `document.languageId` |
-| 光标行 | `editor.selection.active.line` |
-| 选中的代码 | `editor.document.getText(editor.selection)`（若非空） |
-| 诊断（最多 10 条） | `vscode.languages.getDiagnostics(doc.uri)` |
-| 其他打开的标签页（最多 10 个） | `vscode.window.tabGroups.all` |
-| 项目树（2 层） | 工作区文件夹遍历；跳过 `.git`、`build`、`node_modules`、`dist`、`target` 等 |
+| 活动文件路径与语言 | `FileEditorManager` + `FileType` |
+| 光标行 | `Editor.caretModel` |
+| 选中的代码 | `Editor.selectionModel`（若非空） |
+| 诊断（最多 10 条） | 文档标记模型（错误条纹高亮器） |
+| 其他打开的标签页（最多 10 个） | `FileEditorManager.openFiles` |
+| 项目树（2 层） | `LocalFileSystem` 遍历；跳过 `.git`、`build`、`node_modules`、`target`、`.venv` 等 |
 | Git 分支 + 变更数 | `git rev-parse` + `git status --porcelain` 子进程 |
 | 项目规则 | 找到的第一个非空文件：`.jiuwenswarm/instructions.md`、`.jiuwenswarm/rules.md`、`AGENTS.md` |
 | @提及的文件 | 消息中每个 `@path` 的完整文件内容 |
 
 ### 项目规则
 
-在工作区根目录创建一个文件，向每条消息注入固定指令：
+在项目根目录创建一个文件，向每条消息注入固定指令：
 
 ```
 .jiuwenswarm/instructions.md   ← 首先检查
@@ -193,14 +195,14 @@ AGENTS.md                      ← 第三检查
 
 | 设置项 | 效果 |
 |---|---|
-| `jiuwenswarm.projectTree.enabled` | 打开或关闭目录列表 |
-| `jiuwenswarm.projectTree.maxFiles` | 限制大型单仓库的条目数（10–2000） |
+| **包含项目树** | 打开或关闭目录列表 |
+| **项目树最大文件数** | 限制大型单仓库的条目数（10–2000） |
 
 ### 上下文块示例
 
 ```
 <!-- IDE Context -->
-Active file: /Users/mishka/project/src/api/handler.py  (python)
+Active file: /Users/mishka/project/src/api/handler.py  (Python)
 Cursor line: 87
 
 Selected code:
@@ -211,19 +213,19 @@ def handle_request(req):
 ```
 
 Diagnostics (2):
-  • Line 87: Variable 'result' is not used before return
-  • Line 88: blocking_call is deprecated
+  • Variable 'result' is not used before return (line 87)
+  • blocking_call is deprecated
 
 Other open files (2):
   /Users/mishka/project/src/api/router.py
   /Users/mishka/project/tests/test_handler.py
 
 Project structure:
-  src/
-    api/
-    models/
-  tests/
-  pyproject.toml
+src/
+  api/
+  models/
+tests/
+pyproject.toml
 
 Git: branch=feature/async-refactor, 3 uncommitted changes
 
@@ -236,7 +238,7 @@ Always use async/await. No blocking calls. Follow PEP 8.
 
 ## 可点击文件链接
 
-智能体回复中的文件路径会变成可点击链接，在引用的行打开文件。
+智能体回复中的文件路径会变成可点击链接。点击会在编辑器中引用行打开该文件。
 
 | 模式 | 示例 | 效果 |
 |---|---|---|
@@ -252,15 +254,13 @@ Always use async/await. No blocking calls. Follow PEP 8.
 
 | 操作 | Windows / Linux | Mac |
 |---|---|---|
-| 打开 / 聚焦聊天面板 | `Ctrl+Shift+J` | `⌘⇧J` |
+| 新会话 | `Ctrl+Shift+J` | `⌘⇧J` |
 | 发送选中内容 | `Ctrl+Shift+E` | `⌘⇧E` |
-| 新会话（命令面板） | — | — |
-| 用 JiuwenSwarm 修复（灯泡） | `Ctrl+.` | `⌘.` |
+| 用 JiuwenSwarm 修复 | `Alt+Enter` | `⌥Enter` |
 
-**打开 / 聚焦** —— 打开 JiuwenSwarm 面板。若已打开，则将其带到最前。
+**新会话** —— 打开面板（若未可见），然后重连 WebSocket 以开始新会话。消息列表清空。
 
-**发送选中内容**（`Ctrl+Shift+E` / `⌘⇧E` 或右键 → **将选中内容发送到 JiuwenSwarm**）——
-打开面板并预填选中的代码：
+**发送选中内容** —— 打开面板并预填选中的代码，标注文件名：
 
 ```
 [File: handler.py]
@@ -269,21 +269,22 @@ def handle_request(req):
     ...
 ```
 
-补充你的问题并按 Enter。
+在代码后补充你的问题并按 Enter。
 
-**新会话**（命令面板：`JiuwenSwarm: 新会话`）——重连 WebSocket 以开始新会话。
+**右键 → 将选中内容发送到 JiuwenSwarm** —— 与 `Ctrl+Shift+E` 相同。
 
 ---
 
-## 代码操作快速修复
+## Alt+Enter 快速修复
 
-VS Code 会在有错误或警告的行旁显示灯泡 💡。JiuwenSwarm 注册了一个**用 JiuwenSwarm 修复**
-代码操作：
+将光标放到任意错误或警告槽口标记上，按 **Alt+Enter**。**用 JiuwenSwarm 修复** 会出现在
+灯泡菜单中。
 
-1. 将光标放到有错误（红色波浪线）的行上。
-2. 点击灯泡或按 `Ctrl+.` / `⌘.`。
-3. 选择**用 JiuwenSwarm 修复**。
-4. 聊天面板打开，预填错误消息和周围 ±7 行代码：
+发生的过程：
+
+1. 读取错误工具提示文本（去除 HTML）。
+2. 捕获周围 ±7 行代码。
+3. 面板打开并预填输入：
 
 ```
 Fix this error in handler.py:
@@ -291,41 +292,48 @@ Fix this error in handler.py:
 Error:
 Variable 'result' is not used before return
 
-```python
+```py
 def handle_request(req):
     result = blocking_call(req)
     return result
 ```
 ```
 
-5. 按 Enter 发送。
-
-适用于 VS Code 有任何诊断的任何语言——TypeScript、Python、Java、Go、Rust、C# 等。
+适用于 PyCharm 支持的任何语言——Python、Kotlin、Java、TypeScript、Go、Rust 等。
 
 ---
 
 ## 文件编辑工作流
 
-当智能体调用 `str_replace_editor`、`write_file` 或 `create_file` 时，扩展会将编辑应用到
-工作区，并弹出通知 toast 确认每次应用的变更。
+当智能体调用 `str_replace_editor`、`write_file` 或 `create_file` 时，插件会拦截它：
 
-### 带批准
+### 默认：diff 审查
 
-在设置中启用 `jiuwenswarm.approveEdits`，可在每次文件变更前看到**批准 / 拒绝**提示。
-点击**拒绝**丢弃编辑；点击**批准**写入磁盘。
+打开并排 diff 窗口——**当前**（左）vs **拟议**（右）——以便你审查变更。此对话框仅为预览：
+关闭它不会把变更写入文件。要让智能体编辑应用到你的文件，请在设置中启用**自动应用文件编辑**，
+或手动应用拟议变更。
 
-### 带 diff 查看器
+如果无法定位 `str_replace` 的目标文本，会弹出气泡通知解释问题。
 
-启用 `jiuwenswarm.useDiffViewer`，可在应用前于 VS Code 内置 diff 查看器中审查每个拟议编辑，
-然后选择**接受**或**拒绝**。
+### 自动应用
+
+启用**自动应用文件编辑**以跳过 diff 对话框。变更通过 `WriteCommandAction` 应用，可用
+`Ctrl+Z` 撤销。每次编辑都会弹出气泡通知确认。
+
+### 要求批准
+
+启用**编辑前要求批准**，可在应用任何编辑或打开 diff 对话框前显示确认提示。当你希望在提交前
+看到每个拟议变更时很有用。
 
 ---
 
 ## 终端集成
 
-智能体 shell 命令（`bash`、`run_command`）在由 `vscode.window.createTerminal()` 创建的
-**JiuwenSwarm** 终端中运行。终端在第一条命令时创建，后续命令复用；扩展停用时销毁。
-关闭 `jiuwenswarm.runCommandsInTerminal` 可跳过本地运行命令（智能体仍在服务器上运行）。
+智能体 shell 命令（`bash`、`run_command`）被路由到 Terminal 工具窗口中的 **JiuwenSwarm**
+终端标签页。该标签页在第一条命令时创建，后续命令复用。Terminal 工具窗口会自动置于最前。
+
+在设置中关闭**在 IDE 终端中运行命令**，可跳过将智能体命令镜像到 IDE。智能体仍在服务器上运行
+其命令——只有开启此设置时 IDE 才会反映它们。
 
 ---
 
@@ -339,12 +347,13 @@ def handle_request(req):
 
 ### 工作原理
 
-在智能体某一轮首次编辑某文件之前，扩展会快照该文件的当前内容（通过 VS Code 文件系统 API
-读取）。轮次结束时（`chat.final`）快照被锁定。
+在智能体某一轮首次编辑某文件之前，插件会快照该文件的当前内容。轮次结束时（`chat.final`）
+快照被锁定。如果没有编辑，栏不出现。
 
 ### 使用回退
 
-点击 **⟲ 撤销更改**。扩展会恢复每个被快照的文件。该轮之前不存在的文件会被删除。
+点击 **⟲ 撤销更改**。插件使用 `WriteCommandAction` 恢复每个被快照的文件。该轮之前不存在
+的文件会被删除。恢复本身也可用 `Ctrl+Z` 撤销。
 
 状态行确认结果：
 
@@ -361,20 +370,20 @@ def handle_request(req):
 | 你发送另一条消息 | 栏消失；快照被丢弃 |
 | 新会话 | 栏清空 |
 
-通过设置中的 `jiuwenswarm.rewindEnabled` 关闭。
+通过设置中的**启用检查点 / 回退**完全关闭（可减少长时间智能体运行期间的内存占用）。
 
 ---
 
 ## Git 快捷操作
 
-在设置中启用 `jiuwenswarm.gitEnabled`，可在消息列表下方显示包含两个按钮的工具栏：
+在设置中启用 **Git 快捷操作**，可在消息列表下方显示包含两个按钮的工具栏：
 
-**提交** —— 打开输入框，预填你最后发送的消息作为提交消息（前缀 "AI: "）。确认后运行
+**提交** —— 打开对话框，预填你最后发送的消息作为提交消息（前缀 "AI: "）。点击确定后运行
 `git add -u && git commit -m <message>`。提交后 git 栏更新。
 
 **推送** —— 在后台运行 `git push`。完成时状态更新。
 
-git 栏显示当前分支和未提交文件数。每轮智能体结束后更新，且只在 git 仓库内出现。
+git 栏显示当前分支和未提交文件数。每轮智能体结束后自动更新。
 
 ---
 
@@ -382,28 +391,32 @@ git 栏显示当前分支和未提交文件数。每轮智能体结束后更新�
 
 ### 打开浮层
 
-点击页头中的 **⚙ → 会话**。
+点击页头中的 **⚙ → 会话**。浮层滑过消息列表。
 
 ### 列表显示什么
 
-每行显示会话标题、最后消息时间（相对）和消息数。
+每行显示：
+- 会话标题（无标题时为原始会话 ID）
+- 最后消息时间（相对："刚刚"、"3 分钟前"、"2 小时前"、"5 天前"）
+- 消息数
 
 ### 切换
 
-点击一行进行切换。开启 `jiuwenswarm.loadHistoryOnSwitch` 时，历史消息会自动流式加载。
+点击一行进行切换。开启**切换会话时加载历史**时，历史消息会自动流式加载。出现**「正在加载
+历史…」**指示，直到流式加载完成。
 
 ### 创建
 
-点击页头中的**新建**，或从命令面板运行 `JiuwenSwarm: 新会话`。
+点击页头中的**新建**或按 `Ctrl+Shift+J` / `⌘⇧J`。
 
 ### 删除
 
-点击非活动会话行上的 **✕**。点击一次（变红），然后在 2 秒内再点一次确认。活动会话无法删除——
-先开始一个新会话。
+点击非活动会话行上的 **✕**。按钮变红，工具提示变为「再次点击确认」。在 2 秒内再次点击确认
+删除。活动会话无法删除——先切换到另一个会话。
 
 ### 刷新
 
-点击浮层页头中的 **↺**。最多显示 20 个会话。
+点击浮层页头中的 **↺** 重新加载列表。最多显示 20 个会话。
 
 ---
 
@@ -415,27 +428,38 @@ git 栏显示当前分支和未提交文件数。每轮智能体结束后更新�
 
 ### 列表显示什么
 
-每个技能行显示名称、说明、触发词和开/关开关。点击开或关以启用或禁用。变更通过
-`skills.toggle` 发送到服务器。
+每个技能行显示：
+- 名称和说明
+- 触发词（会话内使用的斜杠命令，例如 `/commit`）
+- 开/关开关
+
+### 切换
+
+点击开或关。变更立即通过 `skills.toggle` 发送到服务器。青色 = 已启用；暗灰 = 已禁用。
 
 ### 从输入中选取技能
 
-在文本框中输入 `#`。弹窗列出所有已加载技能。继续输入过滤。用 Enter 或 Tab 选择。
+在聊天文本框中输入 `#`。弹窗列出所有已加载技能。继续输入过滤。用 Enter 或 Tab 选择——技能名
+插入到光标处。首次输入 `#` 时加载技能；列表在该会话中缓存。
 
 ---
 
-## 连接状态栏
+## 连接状态栏部件
 
-状态栏（右下角）显示实时 WebSocket 状态：
-
-| 图标 | 含义 |
+| 部件 | 含义 |
 |---|---|
-| `$(check) JiuwenSwarm` | 已连接 |
-| `$(loading~spin) JiuwenSwarm` | 连接中 |
-| `$(sync~spin) JiuwenSwarm`（黄色） | 重连中——指数退避：1 秒 → 最大 30 秒 |
-| `$(circle-slash) JiuwenSwarm`（红色） | 已断开——点击重新连接 |
+| `⬤ JiuwenSwarm`（青色） | 已连接 |
+| `◌ JiuwenSwarm`（青色） | 连接中 |
+| `↻ JiuwenSwarm`（黄色） | 重连中——指数退避：1 秒 → 2 秒 → 4 秒 → … → 最大 30 秒 |
+| `○ JiuwenSwarm`（灰色） | 已断开——点击重新连接 |
 
-标签旁显示 token 总量：`$(check) JiuwenSwarm · 42.3k`。
+一旦消耗 token，标签旁会显示总量：
+
+```
+⬤ JiuwenSwarm · 42.3k
+```
+
+悬停显示带有会话 ID 和完整 token 数的工具提示。
 
 ---
 
@@ -443,18 +467,18 @@ git 栏显示当前分支和未提交文件数。每轮智能体结束后更新�
 
 | 选项 | 说明 |
 |---|---|
-| **⚙ → ◐ 自动** | 跟随 VS Code 的浅色或深色主题（默认） |
-| **⚙ → 🌙 深色** | 无论 VS Code 主题如何强制深色 |
-| **⚙ → ☀ 浅色** | 无论 VS Code 主题如何强制浅色 |
+| **⚙ → ◐ 自动** | 跟随 IDE 的浅色或深色主题（默认） |
+| **⚙ → 🌙 深色** | 无论 IDE 主题如何强制深色 |
+| **⚙ → ☀ 浅色** | 无论 IDE 主题如何强制浅色 |
 
-存储在 webview 本地存储中；面板重启后保留。
+存储在 JCEF 内的浏览器本地存储中；面板重启后保留。
 
 ---
 
 ## 模型选择器
 
 当连接到配置了多个模型的服务器时，输入栏会出现模型下拉框。点击打开并切换模型。活动模型
-显示在迷你模型片中。
+显示在迷你模型片中。模型可用性取决于服务器配置。
 
 ---
 
@@ -467,6 +491,7 @@ git 栏显示当前分支和未提交文件数。每轮智能体结束后更新�
 - 会话切换、重连、连接状态转换
 - 操作分发（list_sessions、list_skills、toggle_skill 等）
 - 文件编辑工具调用（工具名和参数）
+- 快照事件（`SNAP →`）和回退操作
 
 面板保留最近的 500 行。关闭以隐藏面板；使用**清除**清空日志（其内容在切换间保留）。
 
@@ -476,38 +501,36 @@ git 栏显示当前分支和未提交文件数。每轮智能体结束后更新�
 
 | 症状 | 可能原因 | 解决方法 |
 |---|---|---|
-| 面板空白 | `chat.html` 缺失或 CSP 问题 | 从最新 VSIX 重新安装 |
-| 状态栏显示 `$(circle-slash)` | 服务器未运行或主机/端口错误 | 启动 JiuwenSwarm；核对设置；点击部件重连 |
-| 消息发出但无回复 | 握手后服务器不可达 | 启用调试日志；检查错误帧；从命令面板打开 Webview 开发者工具 |
-| 发送选中内容无反应 | 未选中文本 | 确保按快捷键前在编辑器中选中了文本 |
-| 文件链接打不开 | 文件路径不在工作区 | 检查被引用的文件是否存在 |
-| 缺少回退栏 | `jiuwenswarm.rewindEnabled` 为 false，或编辑被拒绝 | 在设置中启用回退 |
-| 回退恢复 0 个文件 | 快照被后续消息清除 | 在轮次结束后立即点击撤销 |
+| 面板空白 | 未启用 JCEF | 在 **帮助 → 查找操作 → 注册表** 中启用 `ide.browser.jcef.enabled`；重启 |
+| 状态栏显示 `○` | 服务器未运行或主机/端口错误 | 启动 JiuwenSwarm；核对设置；点击状态部件重连 |
+| 消息发出但无回复 | 握手后服务器不可达 | 启用调试日志；查找错误帧；检查服务器日志 |
+| diff 窗口打开但文件未变 | diff 对话框仅为预览 | 拟议变更不会自动应用——启用**自动应用文件编辑**或手动应用 |
+| 缺少回退栏 | 回退已关闭，或轮次结束无文件编辑 | 检查设置中的**启用检查点 / 回退**；启用调试日志并查找 `SNAP →` 行 |
+| 回退恢复 0 个文件 | 快照被后续消息清除 | 在轮次结束后立即点击撤销；快照在下一次发送前保留 |
+| Alt+Enter 不显示选项 | 光标处无错误 | 将光标移到带有红色或黄色槽口标记的行上 |
+| 技能弹窗显示为空 | 服务器无技能，或 `list_skills` 失败 | 检查服务器日志；若服务器返回空列表则弹窗为空 |
+| 会话历史不加载 | **切换会话时加载历史**已关闭，或服务器不支持历史 | 启用该设置；检查服务器日志中 `history.get` 错误 |
 | 「正在加载历史…」不消失 | 服务器未发送 `history.done` | 通过状态栏重连；检查服务器日志 |
-| 会话列表停留在「加载中…」 | 服务器超时或 `session.list` 不受支持 | 点击 ↺ 重试；检查服务器日志 |
-| 技能列表显示错误 | 服务器不支持 `skills.list` | 较旧服务器版本属正常；升级服务器 |
+| 会话 ✕ 按钮缺失 | 会话处于活动状态 | 删除前切换到另一个会话 |
+| 上下文中无项目结构 | 未检测到项目根目录 | 打开一个项目文件夹；`project.basePath` 必须非空 |
+| Git 快捷操作不可见 | **Git 快捷操作**已关闭 | 在设置 → 工具 → JiuwenSwarm 中启用 |
 
-### 阅读扩展日志
+### 阅读 IDE 日志
 
-1. 打开 **视图 → 输出**（`Ctrl+Shift+U` / `⌘⇧U`）。
-2. 从下拉框选择 **JiuwenSwarm**。
-
-对于 webview JavaScript 错误：
-
-1. 从命令面板运行 **开发人员: 打开 Webview 开发者工具**。
-2. 检查**控制台**标签页。
+**帮助 → 在资源管理器中显示日志**（Windows/Linux）或**帮助 → 在访达中显示日志**（macOS）。
+搜索 `JiuwenSwarm`。
 
 ---
 
 ## Swarm Map
 
-Swarm Map 是一个专用 webview 面板，提供活动 `code.team` 会话的实时可视化概览——显示每个
-工作智能体、它们的当前任务、实时文件活动、智能体间消息和整体进度。第一个团队智能体生成时
-会自动在聊天面板旁打开。
+Swarm Map 是一个专用工具窗口，提供活动 `code.team` 会话的实时可视化概览——显示每个工作
+智能体、它们的当前任务、实时文件活动、智能体间消息和整体进度。第一个团队智能体生成时自动
+打开。手动打开：*视图 → 工具窗口 → JiuwenSwarm Swarm*。
 
 ### 三种视图 —— Map（默认）、List 和 Board
 
-使用面板页头中的 **Map / List / Board** 开关切换：
+使用工具窗口页头中的 **Map / List / Board** 开关切换：
 
 - **Map 视图** —— 交互式「智能体地图」。每个工作智能体是画布上沿流水线弧线排列的彩色节点。
   工作时节点**脉冲发光**，完成时显示 **✓**，暂停时显示 **⏸**，当工作沿流水线推进时，动画点
@@ -609,8 +632,8 @@ List 视图顶部的一行胶囊概览每个任务：
 
 ### 泳道点击 → 跳转到文件
 
-当智能体最近接触过某个文件时，悬停其卡片会显示 **↗ 打开文件** 提示。点击卡片在 VS Code
-编辑器中打开该文件。焦点立即移动。
+当智能体最近接触过某个文件时，悬停其卡片会显示 **↗ 打开文件** 提示。点击卡片在编辑器中打开
+该文件。IDE 立即移动焦点。
 
 ### 智能体间消息日志
 
@@ -649,9 +672,9 @@ review-agent  · 0:49
 
 | 症状 | 可能原因 | 解决方法 |
 |---|---|---|
-| Swarm Map 从不打开 | 服务器未发出 `team.member.spawned` | 在输出 → JiuwenSwarm 中检查 `team.event:` 行；确认服务器发送团队事件 |
+| Swarm Map 从不打开 | 服务器未发出 `team.member.spawned` | 在**帮助 → 显示日志**中检查 `team.event:` 行；确认服务器发送团队事件 |
 | 出现泳道卡片但无文件活动 | `chat.tool_call` 载荷缺少 `member_name` | 确认服务器在工具调用事件中包含 `member_name` |
 | 只出现工作线程（无主线程泳道） | 符合预期——编排者被过滤掉 | 设计如此；泳道即工作线程 |
 | 消息开关从不出现 | `team.message.*` 事件缺失或无 `content` 字段 | 检查服务器事件模式 |
 | 不显示 ↗ 打开文件提示 | 智能体尚未调用任何文件工具 | 等待第一次 `read_file`、`write_file` 或 `str_replace_editor` 调用 |
-| 点击导航到错误文件 | 事件中的文件路径是服务器绝对路径，与工作区不匹配 | 确保服务器发送与本地项目根目录匹配的绝对路径 |
+| 点击导航到错误文件 | 事件中的文件路径是服务器绝对路径，与本地挂载不匹配 | 确保服务器发送与本地项目根目录匹配的路径 |

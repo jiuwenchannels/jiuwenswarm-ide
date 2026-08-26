@@ -4,30 +4,9 @@ JiuwenSwarm 插件将一个自主多智能体 AI 编码助手直接嵌入 PyChar
 GoLand 以及所有其他 JetBrains IDE（2023.1+）。面板位于停靠的工具窗口中，逐 token 流式输出
 回复，并通过 diff 审查、终端集成、文件链接导航和 Alt+Enter 快速修复菜单与编辑器集成。
 
-## 前置条件
-
-插件连接前，JiuwenSwarm 必须在本地运行：
-
-```bash
-jiuwenswarm-start
-# WebSocket 服务器在 ws://127.0.0.1:19000/ws 打开
-```
-
-必须启用 JCEF（Chromium Embedded Framework）。如果首次打开时面板空白，请通过
-**帮助 → 查找操作 → 注册表** → `ide.browser.jcef.enabled` 启用，然后重启 IDE。
-
 ## 安装
 
-### 通过 ZIP（推荐）
-
-1. 从[发布页](https://github.com/jiuwencortex/jiuwenswarm-ide/releases)下载
-   `jiuwenswarm-plugin-0.1.0.zip`。
-2. 进入 **设置 → 插件 → ⚙ → 从磁盘安装插件**，选择该 ZIP。
-3. 重启 IDE。
-
-### 通过应用商店
-
-在 **设置 → 插件 → 应用商店** 中搜索 **JiuwenSwarm**，点击安装。
+前置条件与安装说明参见 [JetBrains插件安装.md](JetBrains插件安装.md)。
 
 ## 配置
 
@@ -168,7 +147,7 @@ jiuwenswarm-start
 | 调试控制台 | ☰ 菜单 → **调试日志**（默认关闭）：实时团队事件与工具归属日志，带清除/复制 |
 | 摘要卡片 | 所有工作线程完成时替代泳道：智能体数量、完成任务数、消息数、各智能体耗时 |
 
-完整参考见 [USER_GUIDE.md — Swarm Map](USER_GUIDE.md#swarm-map)。
+完整参考见 [JetBrains插件指南.md — Swarm Map](JetBrains插件指南.md#swarm-map)。
 
 ## Alt+Enter 快速修复
 
