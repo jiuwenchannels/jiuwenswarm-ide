@@ -4,26 +4,9 @@ JiuwenSwarm 扩展将一个自主多智能体 AI 编码助手直接嵌入 Visual
 活动栏侧边栏中，逐 token 流式输出回复，并通过文件编辑、终端集成、文件链接导航和灯泡
 快速修复菜单与编辑器集成。
 
-## 前置条件
-
-扩展连接前，JiuwenSwarm 必须在本地运行：
-
-```bash
-jiuwenswarm-start
-# WebSocket 服务器在 ws://localhost:19000/ws 打开
-```
-
 ## 安装
 
-### 通过 VSIX
-
-1. 从[发布页](https://github.com/jiuwencortex/jiuwenswarm-ide/releases)下载 `jiuwenswarm-0.1.0.vsix`。
-2. 在 VS Code 中进入 **扩展 → ⋯ → 从 VSIX 安装**，选择该文件。
-3. JiuwenSwarm 图标出现在活动栏中。
-
-### 通过应用商店
-
-在 **扩展 → 应用商店** 中搜索 **JiuwenSwarm**，点击安装。
+前置条件与安装说明参见 [VSCode插件安装.md](VSCode插件安装.md)。
 
 ## 配置
 
