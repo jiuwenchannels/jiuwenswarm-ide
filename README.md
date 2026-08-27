@@ -41,26 +41,26 @@ cd jiuwenswarm && jiuwenswarm-start
 
 ## Get Started
 
-- [JetBrains Plugin](docs/user/jetbrains/README.md) — install from ZIP or marketplace
-- [VS Code Extension](docs/user/vscode/README.md) — install from VSIX or marketplace
+- [JetBrains Plugin](docs/en/ide/jetbrains/JetBrains.md) — install from ZIP or marketplace
+- [VS Code Extension](docs/en/ide/vscode/VSCode.md) — install from VSIX or marketplace
 
 Full feature walkthroughs:
-- [JetBrains User Guide](docs/user/jetbrains/USER_GUIDE.md)
-- [VS Code User Guide](docs/user/vscode/USER_GUIDE.md)
+- [JetBrains User Guide](docs/en/ide/jetbrains/JetBrainsGuide.md)
+- [VS Code User Guide](docs/en/ide/vscode/VSCodeGuide.md)
 
 ## Developer Documentation
 
 | Document | What you'll find |
 |----------|------------------|
-| [Architecture Reference](docs/architecture.md) | Protocol, component model, context injection, file-edit handling, shared webview |
-| [Roadmap](docs/roadmap.md) | Feature backlog, completed changelog, and "wow" ideas |
-| [JetBrains Publishing](docs/operations/jetbrains/PUBLISHING.md) | Build, sign, and publish the JetBrains plugin |
-| [VS Code Publishing](docs/operations/vscode/PUBLISHING.md) | Build, package, and publish the VS Code extension |
+| [JetBrains Publishing](ide/publishing/jetbrains/PUBLISHING.md) | Build, sign, and publish the JetBrains plugin |
+| [VS Code Publishing](ide/publishing/vscode/PUBLISHING.md) | Build, package, and publish the VS Code extension |
+| [Architecture Reference](internal/architecture.md) | Protocol, component model, context injection, file-edit handling, shared webview |
+| [Roadmap](internal/roadmap.md) | Feature backlog and planned work |
 
 ## Development
 
 ```
-packages/
+ide/packages/
 ├── shared-webview/      # Self-contained chat UI (vanilla HTML/JS, no build)
 ├── jetbrains-plugin/    # JetBrains plugin (Kotlin + Gradle)
 └── vscode-extension/    # VS Code extension (TypeScript + esbuild)
@@ -73,7 +73,7 @@ Both plugins connect to `ws://localhost:19000/ws` using the same JSON protocol a
 **VS Code extension:**
 
 ```bash
-cd packages/vscode-extension
+cd ide/packages/vscode-extension
 npm install
 npm run build
 npx vsce package --no-dependencies
@@ -85,12 +85,20 @@ Or download the pre-built VSIX: [`jiuwenswarm-0.1.0.vsix`](https://github.com/ji
 **JetBrains plugin:**
 
 ```bash
-cd packages/jetbrains-plugin
+cd ide/packages/jetbrains-plugin
 .\gradlew.bat --no-daemon buildPlugin -x buildSearchableOptions
 # → build/distributions/jiuwenswarm-plugin-0.1.0.zip
 ```
 
 Or download the pre-built ZIP: [`jiuwenswarm-plugin-0.1.0.zip`](https://github.com/jiuwencortex/jiuwenswarm-ide/releases/download/0.1.0/jiuwenswarm-plugin-0.1.0.zip)
+
+## Repository layout
+
+```
+ide/       The workspace (package.json + packages/vscode-extension, jetbrains-plugin, shared-webview; ide/publishing/)
+docs/      User-facing docs (en + zh)
+internal/  Working/design docs (not shipped)
+```
 
 ## Feedback & Source
 
