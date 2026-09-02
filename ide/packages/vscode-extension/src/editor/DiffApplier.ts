@@ -126,6 +126,25 @@ export async function handleToolCall(event: Record<string, unknown>): Promise<bo
 // Core operations
 // ──────────────────────────────────────────
 
+/**
+ * Replace the entire content of the document at *uri* through the VS Code
+ * workspace-edit pipeline, then save. The covered span is derived from the
+ * document's line layout — start of line 0 through the end of the final line —
+ * which always equals the full text. Returns whether the edit was applied.
+ */
+async function replaceWholeFile(uri: vscode.Uri, content: string): Promise<boolean> {
+  const doc = await vscode.workspace.openTextDocument(uri);
+  const finalLine = doc.lineAt(doc.lineCount - 1);
+  const wholeFile = new vscode.Range(new vscode.Position(0, 0), finalLine.range.end);
+  const change = new vscode.WorkspaceEdit();
+  change.replace(uri, wholeFile, content);
+  const applied = await vscode.workspace.applyEdit(change);
+  if (applied) {
+    await doc.save();
+  }
+  return applied;
+}
+
 async function applyStrReplace(
   filePath: string,
   oldStr: string,
@@ -160,17 +179,8 @@ async function applyStrReplace(
   const proposed = original.substring(0, idx) + newStr + original.substring(idx + oldStr.length);
 
   try {
-    const uri = vscode.Uri.file(filePath);
-    const doc = await vscode.workspace.openTextDocument(uri);
-    const edit = new vscode.WorkspaceEdit();
-    const fullRange = new vscode.Range(
-      doc.positionAt(0),
-      doc.positionAt(original.length),
-    );
-    edit.replace(uri, fullRange, proposed);
-    const success = await vscode.workspace.applyEdit(edit);
+    const success = await replaceWholeFile(vscode.Uri.file(filePath), proposed);
     if (success) {
-      await doc.save();
       notify(`Applied edit to ${path.basename(filePath)}`);
     }
     return success;
@@ -210,22 +220,15 @@ async function writeEntireFile(
 
     const uri = vscode.Uri.file(filePath);
     if (isNew || !fs.existsSync(filePath)) {
-      // Create new file
-      const edit = new vscode.WorkspaceEdit();
-      edit.createFile(uri, { overwrite: false });
-      await vscode.workspace.applyEdit(edit);
+      // Create the file first so the later content write targets an existing
+      // document (WorkspaceEdit can only replace within an existing file).
+      const create = new vscode.WorkspaceEdit();
+      create.createFile(uri, { overwrite: false });
+      await vscode.workspace.applyEdit(create);
     }
 
-    const doc = await vscode.workspace.openTextDocument(uri);
-    const edit = new vscode.WorkspaceEdit();
-    const fullRange = new vscode.Range(
-      doc.positionAt(0),
-      doc.positionAt(doc.getText().length),
-    );
-    edit.replace(uri, fullRange, content);
-    const success = await vscode.workspace.applyEdit(edit);
+    const success = await replaceWholeFile(uri, content);
     if (success) {
-      await doc.save();
       notify(`${label} applied: ${path.basename(filePath)}`);
     }
     return success;
