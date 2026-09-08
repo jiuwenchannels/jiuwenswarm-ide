@@ -107,7 +107,17 @@ class JiuwenSwarmSettings : PersistentStateComponent<JiuwenSwarmSettings.State> 
         get() = state.gitEnabled
         set(v) { state = state.copy(gitEnabled = v) }
 
-    val wsUrl: String get() = "ws://$host:$port/ws"
+    /** WebSocket URL. Uses `ws://` only for a local host, otherwise `wss://` (TLS). */
+    val wsUrl: String get() {
+        val scheme = if (isLocalHost) "ws" else "wss"
+        return "$scheme://$host:$port/ws"
+    }
+
+    private val isLocalHost: Boolean
+        get() {
+            val h = host.trim().lowercase()
+            return h.isEmpty() || h == "127.0.0.1" || h == "localhost" || h == "::1"
+        }
 
     companion object {
         fun instance(): JiuwenSwarmSettings =

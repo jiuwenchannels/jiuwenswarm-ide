@@ -2,6 +2,7 @@ package com.jiuwenswarm.plugin.client
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.logger
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
@@ -241,6 +242,11 @@ class SessionManager(
         params: Map<String, Any>,
         sid: String? = null,
     ): JsonObject {
+        // Blocking wait (up to REQUEST_TIMEOUT_SEC) must never happen on the EDT or the UI freezes.
+        // All call sites dispatch to a pooled/background thread first; fail fast if a future caller does not.
+        check(!ApplicationManager.getApplication().isDispatchThread) {
+            "SessionManager.request('$method') must not be called from the EDT"
+        }
         val id = UUID.randomUUID().toString()
         val paramsWithSession = params.toMutableMap()
         if (sid != null) paramsWithSession["session_id"] = sid

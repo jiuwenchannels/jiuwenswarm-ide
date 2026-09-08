@@ -228,15 +228,18 @@ object DiffApplier {
                 WriteCommandAction.runWriteCommandAction(project, "JiuwenSwarm $label: $path", null, {
                     val file = File(path)
                     if (!file.parentFile.exists()) file.parentFile.mkdirs()
-                    val vf: VirtualFile = if (isNew || !file.exists()) {
+                    val fs = LocalFileSystem.getInstance()
+                    val vf: VirtualFile? = if (isNew || !file.exists()) {
                         VfsUtil.createDirectories(file.parent)
-                        val parentVf = LocalFileSystem.getInstance()
-                            .refreshAndFindFileByPath(file.parent)!!
-                        parentVf.createChildData(this, file.name)
+                        fs.refreshAndFindFileByPath(file.parent)?.createChildData(this, file.name)
                     } else {
-                        LocalFileSystem.getInstance().refreshAndFindFileByPath(path)!!
+                        fs.refreshAndFindFileByPath(path)
                     }
-                    VfsUtil.saveText(vf, content)
+                    if (vf != null) {
+                        VfsUtil.saveText(vf, content)
+                    } else {
+                        notify(project, "Could not locate target: $path", error = true)
+                    }
                 })
                 notify(project, "$label applied: $path")
             }

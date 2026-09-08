@@ -25,7 +25,11 @@ export function activate(context: vscode.ExtensionContext): void {
   const autoConnect = cfg.get<boolean>('autoConnect', true);
   const keepAliveEnabled = cfg.get<boolean>('keepAlive.enabled', true);
   const keepAliveInterval = cfg.get<number>('keepAlive.interval', 30);
-  const url = `ws://${host}:${port}/ws`;
+  const hostLower = host.trim().toLowerCase();
+  const scheme = hostLower === '' || hostLower === '127.0.0.1' || hostLower === 'localhost' || hostLower === '::1'
+    ? 'ws'
+    : 'wss';
+  const url = `${scheme}://${host}:${port}/ws`;
 
   // Copy shared webview HTML into extension resources
   ensureWebviewHtml(context);

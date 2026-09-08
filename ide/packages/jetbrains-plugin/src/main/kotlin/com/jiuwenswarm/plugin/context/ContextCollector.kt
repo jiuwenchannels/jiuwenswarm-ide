@@ -20,6 +20,9 @@ import java.io.File
  */
 object ContextCollector {
 
+    /** Files read into context (rules / @-mentions) larger than this are skipped. */
+    private val MAX_CONTEXT_FILE_BYTES = 512L * 1024
+
     /** Returns a formatted context block, or null if there is nothing useful to inject. */
     fun collect(project: Project, mentionedPaths: List<String> = emptyList()): String? {
         // ── Phase 1: gather all IntelliJ-API data under ReadAction ──────────
@@ -117,7 +120,7 @@ object ContextCollector {
             File(base, "AGENTS.md"),
         )
         for (f in candidates) {
-            if (f.exists() && f.canRead()) {
+            if (f.exists() && f.canRead() && f.length() <= MAX_CONTEXT_FILE_BYTES) {
                 val content = f.readText().trim()
                 if (content.isNotEmpty()) return content
             }
@@ -131,6 +134,10 @@ object ContextCollector {
         for (p in paths) {
             val f = File(p)
             if (f.exists() && f.canRead()) {
+                if (f.length() > MAX_CONTEXT_FILE_BYTES) {
+                    parts += "@$p: (file too large, skipped)"
+                    continue
+                }
                 val ext = f.extension.ifBlank { "text" }
                 parts += "@$p:"
                 parts += "```$ext"

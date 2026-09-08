@@ -51,10 +51,9 @@ object GitContextProvider {
     private fun runGit(workDir: String, vararg cmd: String): String {
         val process = ProcessBuilder(*cmd)
             .directory(File(workDir))
-            .redirectErrorStream(false)
+            .redirectErrorStream(true)
             .start()
-        // Discard stderr so error output doesn't bleed into our result
-        process.errorStream.use { it.readBytes() }
+        // redirectErrorStream merges stderr into stdout so reading a single stream can't deadlock.
         val output = process.inputStream.bufferedReader().readText()
         val finished = process.waitFor(5, TimeUnit.SECONDS)
         if (!finished || process.exitValue() != 0) {

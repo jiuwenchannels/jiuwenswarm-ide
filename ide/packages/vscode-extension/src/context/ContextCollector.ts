@@ -153,6 +153,9 @@ const SKIP_DIRS = new Set([
   'target', '__pycache__', '.venv', 'venv', '.tox', 'coverage', '.cache',
 ]);
 
+/** Files @-mentioned in a message larger than this are skipped instead of injected. */
+const MAX_MENTIONED_FILE_BYTES = 512 * 1024;
+
 function collectProjectTree(maxFiles = 200): { text: string; fileCount: number } | undefined {
   const folders = vscode.workspace.workspaceFolders;
   if (!folders || folders.length === 0) return undefined;
@@ -263,6 +266,11 @@ function collectMentionedFiles(paths: string[]): string | undefined {
   for (const p of paths) {
     try {
       if (fs.existsSync(p)) {
+        const stat = fs.statSync(p);
+        if (stat.size > MAX_MENTIONED_FILE_BYTES) {
+          parts.push(`@${p}: (file too large, skipped)`);
+          continue;
+        }
         const content = fs.readFileSync(p, 'utf-8');
         const ext = path.extname(p).replace('.', '') || 'text';
         parts.push(`@${p}:`);
