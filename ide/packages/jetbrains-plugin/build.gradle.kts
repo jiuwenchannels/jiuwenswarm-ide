@@ -1,7 +1,7 @@
 plugins {
     id("java")
-    id("org.jetbrains.kotlin.jvm") version "1.9.25"
-    id("org.jetbrains.intellij.platform") version "2.1.0"
+    id("org.jetbrains.kotlin.jvm") version "2.4.0"
+    id("org.jetbrains.intellij.platform") version "2.19.0"
 }
 
 group = "com.jiuwenswarm"
@@ -16,8 +16,10 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        intellijIdeaCommunity("2024.1")
-        instrumentationTools()
+        // Build against the locally installed IDE so the plugin matches its platform (build 262).
+        local("C:\\Program Files\\JetBrains\\WebStorm 2026.1")
+        bundledPlugin("com.intellij.modules.jcef")
+        bundledPlugin("org.jetbrains.plugins.terminal")
     }
 
     // OkHttp for WebSocket
@@ -27,7 +29,7 @@ dependencies {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 intellijPlatform {
@@ -37,7 +39,7 @@ intellijPlatform {
         version = project.version.toString()
 
         ideaVersion {
-            sinceBuild = "231"
+            sinceBuild = "262"
             untilBuild = provider { null }
         }
 
@@ -63,7 +65,7 @@ intellijPlatform {
 
 tasks {
     wrapper {
-        gradleVersion = "8.7"
+        gradleVersion = "9.6.0"
     }
 }
 
@@ -103,3 +105,4 @@ tasks.named("processResources") {
 tasks.named("instrumentCode") {
     enabled = false
 }
+
