@@ -370,10 +370,22 @@ export class ChatPanel implements vscode.Disposable {
       const isFileEdit = toolName === 'str_replace_editor' || toolName === 'write_file' || toolName === 'create_file' || toolName === 'edit_file';
 
       if (isFileEdit) {
-        const args = (payload.tool_call as Record<string, unknown>)?.arguments as Record<string, unknown>
-          || (payload.tool_input as Record<string, unknown>)
-          || (payload.input as Record<string, unknown>)
+        // Some backends send arguments as a JSON string; without parsing it the
+        // file path is lost and no rewind snapshot is taken.
+        const rawArgs = (payload.tool_call as Record<string, unknown>)?.arguments
+          || payload.tool_input
+          || payload.input
           || {};
+        let args: Record<string, unknown> = {};
+        if (typeof rawArgs === 'string') {
+          try {
+            args = JSON.parse(rawArgs) as Record<string, unknown>;
+          } catch {
+            args = {};
+          }
+        } else if (rawArgs && typeof rawArgs === 'object') {
+          args = rawArgs as Record<string, unknown>;
+        }
         const filePath = (args.file_path as string) || (args.path as string) || undefined;
 
         if (filePath) {
