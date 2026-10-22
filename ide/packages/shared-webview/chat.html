@@ -2379,7 +2379,7 @@ function updateSkills(skills) {
         (skill.trigger    ? '<div class="skill-trigger">' + escapeHtml(skill.trigger)    + '</div>' : '') +
       '</div>' +
       '<button class="skill-toggle-btn' + (enabled ? ' enabled' : '') + '" ' +
-        'onclick="toggleSkill(' + JSON.stringify(skillKey(skill)) + ',' + !enabled + ')" ' +
+        'onclick="toggleSkill(' + escapeHtml(JSON.stringify(skillKey(skill))) + ',' + !enabled + ')" ' +
         'title="' + (enabled ? 'Disable' : 'Enable') + '">' +
         (enabled ? 'ON' : 'OFF') +
       '</button>';
