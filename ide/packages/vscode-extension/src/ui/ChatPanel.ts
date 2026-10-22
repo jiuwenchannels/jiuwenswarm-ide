@@ -895,7 +895,22 @@ export class ChatPanel implements vscode.Disposable {
   // ──────────────────────────────────────────
   private async openFile(filePath: string, line: number): Promise<void> {
     try {
-      const uri = vscode.Uri.file(filePath);
+      const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+      let resolved = filePath;
+      if (!path.isAbsolute(resolved) && root) {
+        resolved = path.join(root, resolved);
+      }
+      let uri = vscode.Uri.file(resolved);
+      if (!fs.existsSync(resolved)) {
+        // Bare/relative references from the model may not include the full path.
+        const base = path.basename(filePath);
+        const matches = await vscode.workspace.findFiles(`**/${base}`, '**/node_modules/**', 5);
+        if (matches.length === 0) {
+          this.debug(`open_file: not found: ${filePath}`);
+          return;
+        }
+        uri = matches[0];
+      }
       const doc = await vscode.workspace.openTextDocument(uri);
       // Open in a real editor group (not over the chat webview). If the file is
       // already visible in some group, showTextDocument reuses that editor.

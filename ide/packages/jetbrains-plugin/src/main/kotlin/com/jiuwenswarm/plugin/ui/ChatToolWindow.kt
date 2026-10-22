@@ -20,6 +20,7 @@ import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.psi.PsiManager
+import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.PsiSearchHelper
 import com.intellij.ui.content.ContentFactory
@@ -546,8 +547,17 @@ class ChatPanel(
                     val path = msg.get("path")?.asString ?: return
                     val line = msg.get("line")?.asInt ?: 0
                     ApplicationManager.getApplication().invokeLater {
-                        val vf = LocalFileSystem.getInstance().findFileByPath(path)
-                            ?: LocalFileSystem.getInstance().refreshAndFindFileByPath(path)
+                        val basePath = project.basePath
+                        val resolved = if (File(path).isAbsolute || basePath == null) path
+                                       else File(basePath, path).path
+                        var vf = LocalFileSystem.getInstance().findFileByPath(resolved)
+                            ?: LocalFileSystem.getInstance().refreshAndFindFileByPath(resolved)
+                        if (vf == null) {
+                            // Bare/relative references may omit the full path.
+                            vf = FilenameIndex.getFilesByName(
+                                project, File(path).name, GlobalSearchScope.projectScope(project)
+                            ).firstOrNull()?.virtualFile
+                        }
                         if (vf != null) {
                             OpenFileDescriptor(project, vf, maxOf(0, line - 1), 0).navigate(true)
                         } else {
