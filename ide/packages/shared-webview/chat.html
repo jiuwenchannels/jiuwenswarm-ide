@@ -2527,20 +2527,24 @@ function startRenameSession() {
   htEl.parentNode.insertBefore(inp, htEl);
   inp.focus();
   inp.select();
-  function save() {
+  var finished = false;
+  function finish(commit) {
+    if (finished) return;
+    finished = true;
     var val = inp.value.trim();
-    if (val && val !== current) {
+    if (commit && val && val !== current) {
       state.sessionTitle = val;
       send({ type: 'rename_session', title: val });
     }
-    htEl.textContent = val || current;
+    // Escape restores the original title; Enter/click commits the edited value.
+    htEl.textContent = commit ? (val || current) : current;
     htEl.style.display = '';
     inp.remove();
   }
-  inp.addEventListener('blur', save);
+  inp.addEventListener('blur', function() { finish(true); });
   inp.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') { e.preventDefault(); save(); }
-    if (e.key === 'Escape') { htEl.style.display = ''; inp.remove(); }
+    if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+    if (e.key === 'Escape') { e.preventDefault(); finish(false); }
   });
 }
 
