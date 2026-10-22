@@ -1914,7 +1914,12 @@ function handleHostMessage(msg) {
       break;
     case 'mode_updated': {
       var nextMode = ideModeFromServer(msg.mode);
-      if (nextMode) applyMode(nextMode);
+      if (nextMode) {
+        applyMode(nextMode);
+        // Pin the session-owned mode so a later 'connected' update carrying the
+        // workspace default cannot override what the server restored.
+        state.modeCustomized = true;
+      }
       break;
     }
     case 'memory':
@@ -1956,6 +1961,8 @@ function setConnected(yes, sessionId, title) {
     updateSessionPathMenu();
     document.getElementById('header-title').textContent = state.sessionTitle;
     if (isNewSession) {
+      // A mode restored for the previous session must not leak into the next one.
+      state.modeCustomized = false;
       clearMessages();
       clearAttachments();
       if (state.historyLoading) {
@@ -2523,11 +2530,16 @@ function selectMode(mode) {
 }
 
 function ideModeFromServer(mode) {
-  var m = String(mode || '').toLowerCase();
+  var m = String(mode || '').toLowerCase().trim();
   if (!m) return null;
-  if (m === 'code.team' || m === 'team' || m.indexOf('team') === 0) return 'code.team';
-  if (m === 'code.plan' || m === 'agent.plan' || m === 'plan' || m.slice(-5) === '.plan') return 'code.plan';
-  if (m === 'code.normal' || m === 'agent' || m === 'code' || m === 'normal' || m === 'execute') return 'code.normal';
+  // Canonical server modes include compound values such as
+  // team.code.normal, agent.code.plan and agent.work.normal.
+  if (m === 'team' || m.indexOf('team.') === 0) return 'code.team';
+  var parts = m.split('.');
+  if (m === 'plan' || parts.indexOf('plan') !== -1) return 'code.plan';
+  if (m === 'execute' || m === 'normal' || m === 'code' || m === 'agent'
+      || parts.indexOf('normal') !== -1 || parts.indexOf('execute') !== -1
+      || parts.indexOf('fast') !== -1) return 'code.normal';
   return null;
 }
 
