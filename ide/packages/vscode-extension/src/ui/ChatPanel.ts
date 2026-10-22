@@ -150,8 +150,14 @@ export class ChatPanel implements vscode.Disposable {
         const mentionedPaths = (msg.mentionedPaths as string[] | undefined) || [];
         if (!rid) return;
         this.lastRequestId = rid;
-        // Clear snapshots from previous turn; rewind is no longer valid
-        DiffApplier.clearSnapshots();
+        // Capture pre-turn content BEFORE the backend starts editing. The server
+        // executes file tools before emitting chat.tool_call, so snapshots taken
+        // from that event would already contain the agent's changes.
+        if (vscode.workspace.getConfiguration('jiuwenswarm').get<boolean>('rewindEnabled', true)) {
+          DiffApplier.beginTurn(this.collectRewindPaths(mentionedPaths));
+        } else {
+          DiffApplier.clearSnapshots();
+        }
         this.postToWebview({ type: 'rewindable', enabled: false });
         if (!this.ws.isConnected() || !this.session.sessionId) {
           this.postToWebview({ type: 'error', message: 'Not connected to JiuwenSwarm' });
@@ -392,8 +398,12 @@ export class ChatPanel implements vscode.Disposable {
         if (filePath) {
           const cfg = vscode.workspace.getConfiguration('jiuwenswarm');
           if (cfg.get<boolean>('rewindEnabled', true)) {
-            DiffApplier.ensureSnapshot(filePath);
-            this.debug(`SNAP  → snapshotted ${filePath}`);
+            DiffApplier.noteFileEdit(
+              filePath,
+              (args.old_str as string) || (args.old_string as string) || undefined,
+              (args.new_str as string) || (args.new_string as string) || undefined,
+            );
+            this.debug(`SNAP  → recorded edit ${filePath}`);
           }
 
           if (cfg.get<boolean>('useDiffViewer', false)) {
@@ -767,6 +777,34 @@ export class ChatPanel implements vscode.Disposable {
   // ──────────────────────────────────────────
   // Session helpers
   // ──────────────────────────────────────────
+  /**
+   * Paths to snapshot before a turn: open editors, the active file, and
+   * @-mentioned files. The backend writes files before it emits the tool call,
+   * so this is the only reliable point to capture the pre-edit state.
+   */
+  private collectRewindPaths(mentionedPaths: string[]): string[] {
+    const paths = new Set<string>();
+    for (const doc of vscode.workspace.textDocuments) {
+      if (doc.uri.scheme === 'file' && !doc.isUntitled) paths.add(doc.uri.fsPath);
+    }
+    const active = vscode.window.activeTextEditor?.document;
+    if (active?.uri.scheme === 'file') paths.add(active.uri.fsPath);
+
+    const roots = (vscode.workspace.workspaceFolders || []).map((f) => f.uri.fsPath);
+    for (const raw of mentionedPaths) {
+      if (!raw) continue;
+      if (path.isAbsolute(raw)) {
+        paths.add(raw);
+        continue;
+      }
+      for (const root of roots) {
+        const candidate = path.join(root, raw);
+        if (fs.existsSync(candidate)) paths.add(candidate);
+      }
+    }
+    return Array.from(paths);
+  }
+
   private async listSessions(): Promise<void> {
     try {
       this.debug('ACTION→ list_sessions');
@@ -1016,14 +1054,21 @@ export class ChatPanel implements vscode.Disposable {
   // ──────────────────────────────────────────
   private async handleRewind(): Promise<void> {
     const snapshots = DiffApplier.getLastTurnSnapshots();
-    if (snapshots.size === 0) return;
-    this.debug(`ACTION→ rewind ${snapshots.size} file(s)`);
-    const { restored, failed } = await DiffApplier.performRewind(snapshots);
+    const inverseEdits = DiffApplier.getLastTurnInverseEdits();
+    if (snapshots.size === 0 && inverseEdits.size === 0) {
+      const message = 'Nothing to undo for the last turn';
+      this.postToWebview({ type: 'rewind_done', message, restored: 0, failed: 0 });
+      vscode.window.showInformationMessage(`JiuwenSwarm: ${message}`);
+      return;
+    }
+    this.debug(`ACTION→ rewind ${snapshots.size} file(s), ${inverseEdits.size} reverse edit(s)`);
+    const { restored, failed } = await DiffApplier.performRewind(snapshots, inverseEdits);
     DiffApplier.clearLastTurnSnapshots();
     const message = failed === 0
       ? `Rewound ${restored} file(s)`
       : `Rewound ${restored} file(s), ${failed} failed`;
     this.postToWebview({ type: 'rewind_done', message, restored, failed });
+    vscode.window.showInformationMessage(`JiuwenSwarm: ${message}`);
     this.debug(`REWIND→ ${message}`);
   }
 
