@@ -3495,9 +3495,38 @@ function attachIntermediateLlmResponses(events) {
   return out;
 }
 
+function displayTextFromFinalPayload(payload) {
+  var raw = payload && typeof payload.content === 'string' ? payload.content : '';
+  if (!raw) return '';
+  if (raw.indexOf('team.leader:') === 0) {
+    try {
+      var leader = JSON.parse(raw.slice('team.leader:'.length));
+      if (leader && typeof leader.content === 'string') return leader.content;
+    } catch (e) { /* fall through to raw */ }
+    return raw;
+  }
+  if (raw.indexOf('team.event:') === 0) {
+    try {
+      var parsed = JSON.parse(raw.slice('team.event:'.length));
+      var ev = parsed.event || (parsed.payload && parsed.payload.event) || parsed;
+      var from = ev && ev.from_member;
+      var to = ev && ev.to_member;
+      var type = ev && ev.type;
+      var toUser = from === 'team_leader' || (type === 'team.message.p2p' && to === 'user');
+      if (ev && typeof ev.content === 'string' && toUser) return ev.content;
+    } catch (e) { /* fall through to raw */ }
+  }
+  return raw;
+}
+
 function finalizeTurn(rid, payload) {
   hideThinkingPill(rid);
-  const pt = state.pendingTurns[rid];
+  let pt = state.pendingTurns[rid];
+  // Team mode can emit the leader's answer under a member/leader request id.
+  // Fall back to the latest live turn so it is not left blank.
+  if (!pt && payload && typeof payload.content === 'string' && payload.content.trim()) {
+    pt = getActivePendingTurn();
+  }
   if (pt) {
     if (pt.typingEl) {
       pt.typingEl.remove();
@@ -3519,6 +3548,17 @@ function finalizeTurn(rid, payload) {
       }
     });
 
+    // Team mode often delivers the leader's answer only in chat.final, without
+    // any chat.delta chunks. Render it so the turn is not left blank.
+    const finalPayloadText = displayTextFromFinalPayload(payload);
+    if (!String(pt.textContent || '').trim() && finalPayloadText.trim()) {
+      var finalSpan = document.createElement('span');
+      finalSpan.className = 'chunk-text';
+      finalSpan.textContent = finalPayloadText;
+      pt.streamEl.appendChild(finalSpan);
+      pt.textContent = finalPayloadText;
+    }
+
     // Premature final: when an interrupt question is awaiting an answer, the server
     // emits chat.final for the original turn BEFORE the user responds. Don't finalize
     // then — the resumed stream (keyed by the question's request_id) continues this
@@ -3538,7 +3578,7 @@ function finalizeTurn(rid, payload) {
     // timeline has no response entry to display. Intermediate calls stream no
     // text deltas, so fall back to the chat.final payload content.
     const finalText = (pt.textContent ? pt.textContent.trim() : '')
-      || (payload && payload.content ? String(payload.content).trim() : '')
+      || finalPayloadText.trim()
       || '';
     if (finalText) {
       const lastE = pt.events[pt.events.length - 1];
