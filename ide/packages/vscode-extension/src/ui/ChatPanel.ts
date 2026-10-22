@@ -406,6 +406,7 @@ export class ChatPanel implements vscode.Disposable {
               new_str: (args.new_str as string) || (args.new_string as string) || undefined,
               new_string: (args.new_string as string) || (args.new_str as string) || undefined,
               content: args.content as string | undefined,
+              file_text: args.file_text as string | undefined,
               command: args.command as string | undefined,
             });
             if (proposed !== undefined) {
