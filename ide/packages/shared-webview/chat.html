@@ -1801,6 +1801,9 @@ function handleHostMessage(msg) {
     case 'jiuwen_event':
       handleJiuwenEvent(msg.event);
       break;
+    case 'team_message':
+      appendTeamLeaderMessage(msg.content);
+      break;
     case 'error':
       showError(msg.message);
       break;
@@ -2806,6 +2809,29 @@ function beginTurn(requestId, userContent) {
 
   state.pendingTurns[requestId].events.push({ type: 'user', t: Date.now(), detail: userContent });
 
+  scrollToBottom();
+}
+
+// Leader/peer messages addressed to the user arrive as team events. Append
+// them to the live assistant turn so the transcript shows the leader's answer
+// (the WebUI does the same via teamEventUtils). Content already streamed or
+// finalised for this turn is not duplicated.
+function appendTeamLeaderMessage(text) {
+  if (!text || !String(text).trim()) return;
+  var pt = getActivePendingTurn();
+  if (!pt) return;
+  var incoming = String(text).trim();
+  if (pt.textContent && pt.textContent.indexOf(incoming) !== -1) return;
+  if (pt.typingEl) {
+    pt.typingEl.remove();
+    pt.typingEl = null;
+  }
+  var prefix = pt.textContent ? '\n\n' : '';
+  var span = document.createElement('span');
+  span.className = 'chunk-text';
+  span.textContent = prefix + incoming;
+  pt.streamEl.appendChild(span);
+  pt.textContent += prefix + incoming;
   scrollToBottom();
 }
 

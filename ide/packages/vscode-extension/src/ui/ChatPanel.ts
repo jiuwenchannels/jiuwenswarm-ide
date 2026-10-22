@@ -339,6 +339,12 @@ export class ChatPanel implements vscode.Disposable {
       if (snap.lanes.length === 1 && snap.lanes[0].status !== 'SHUTDOWN') {
         this.swarmMapPanel?.show();
       }
+      // Leader/peer messages addressed to the user are chat content too, not
+      // just swarm-map activity. Forward them so the transcript is not empty.
+      const teamText = this.extractUserFacingTeamMessage(rawTeamEvent);
+      if (teamText) {
+        this.postToWebview({ type: 'team_message', content: teamText });
+      }
       return;
     }
 
@@ -473,6 +479,29 @@ export class ChatPanel implements vscode.Disposable {
     this.debug(`CONV  → event_type=${et} request_id=${converted.request_id}`);
     this.postToWebview({ type: 'jiuwen_event', event: converted });
     this.trackTokenUsage(converted);
+  }
+
+  /**
+   * Returns the text of a team event when the message is addressed to the user
+   * (leader-to-user, or a p2p message whose target is `user`), otherwise null.
+   * Mirrors the WebUI's `teamEventUtils` predicate so both clients show the
+   * same leader feedback in the transcript.
+   */
+  private extractUserFacingTeamMessage(rawTeamEvent: string): string | null {
+    try {
+      const parsed = JSON.parse(rawTeamEvent) as Record<string, unknown>;
+      const event = (parsed.event as Record<string, unknown> | undefined) || parsed;
+      const content = typeof event.content === 'string' ? event.content : '';
+      if (!content.trim()) return null;
+      const fromMember = typeof event.from_member === 'string' ? event.from_member : '';
+      const toMember = typeof event.to_member === 'string' ? event.to_member : '';
+      const eventType = typeof event.type === 'string' ? event.type : '';
+      const toUser = fromMember === 'team_leader'
+        || (eventType === 'team.message.p2p' && toMember === 'user');
+      return toUser ? content : null;
+    } catch {
+      return null;
+    }
   }
 
   /**
