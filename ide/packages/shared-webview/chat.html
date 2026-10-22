@@ -921,6 +921,13 @@
     flex-wrap: wrap;
   }
   #attachment-preview.has-items { display: flex; }
+  #attachment-error {
+    display: none;
+    padding: 0 0 6px 0;
+    font-size: 11px;
+    color: var(--error-text);
+  }
+  #attachment-error.visible { display: block; }
   .attachment-thumb {
     position: relative;
     width: 48px;
@@ -1609,6 +1616,7 @@
 
 <div id="input-area">
   <div id="attachment-preview"></div>
+  <div id="attachment-error" role="status" aria-live="polite"></div>
   <div id="input-row">
     <div id="mention-popup" class="hidden"></div>
     <div id="skill-popup" class="hidden"></div>
@@ -1624,7 +1632,7 @@
   <input type="file" id="image-input" accept="image/png,image/jpeg,image/webp,image/gif" multiple style="display:none">
   <div id="input-meta">
     <!-- Attach button — leftmost -->
-    <button id="attach-btn" disabled title="Add Image" onclick="document.getElementById('image-input').click()">+</button>
+    <button id="attach-btn" disabled title="Images: up to 10 MB each" onclick="document.getElementById('image-input').click()">+</button>
     <!-- Mode selector -->
     <div id="mode-wrap">
       <button id="mode-btn" onclick="toggleModeDropdown()" title="Coding mode — choose how the agent works">
@@ -1992,11 +2000,11 @@ function handleImageInput(files) {
   const maxSize = 10 * 1024 * 1024; // 10 MB
   Array.from(files).forEach(function(file) {
     if (!validTypes.includes(file.type)) {
-      console.warn('[webview] Unsupported image type:', file.type);
+      showAttachmentError('Unsupported image type: ' + (file.type || file.name) + '. Use PNG, JPEG, WebP or GIF.');
       return;
     }
     if (file.size > maxSize) {
-      console.warn('[webview] Image too large:', file.name, file.size);
+      showAttachmentError('"' + file.name + '" is ' + fmtBytes(file.size) + ', above the 10 MB image limit.');
       return;
     }
     // Create a blob URL immediately for preview (avoids embedding large base64 in DOM)
@@ -2013,6 +2021,24 @@ function handleImageInput(files) {
   });
 }
 
+var attachmentErrorTimer = null;
+
+function showAttachmentError(message) {
+  var el = document.getElementById('attachment-error');
+  if (!el) {
+    console.warn('[webview] ' + message);
+    return;
+  }
+  el.textContent = message;
+  el.classList.add('visible');
+  if (attachmentErrorTimer) clearTimeout(attachmentErrorTimer);
+  attachmentErrorTimer = setTimeout(function() {
+    el.classList.remove('visible');
+    el.textContent = '';
+    attachmentErrorTimer = null;
+  }, 5000);
+}
+
 function readFileAsBase64(file, callback) {
   var reader = new FileReader();
   reader.onload = function(e) {
@@ -2021,7 +2047,7 @@ function readFileAsBase64(file, callback) {
     callback(base64);
   };
   reader.onerror = function() {
-    console.warn('[webview] Failed to read file:', file.name);
+    showAttachmentError('Failed to read image: ' + file.name);
   };
   reader.readAsDataURL(file);
 }
