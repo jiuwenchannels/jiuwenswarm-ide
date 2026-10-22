@@ -42,6 +42,7 @@ export type ExtToWebviewMsg =
   | { type: 'jiuwen_event'; event: Record<string, unknown> }
   | { type: 'team_message'; content: string }
   | { type: 'models_updated'; models: ModelEntry[]; activeModel?: string }
+  | { type: 'mode_updated'; mode?: string }
   | { type: 'error'; message?: string; requestId?: string }
   | { type: 'debug_log'; line: string }
   | { type: 'prefill'; content: string }

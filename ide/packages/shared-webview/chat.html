@@ -1875,6 +1875,11 @@ function handleHostMessage(msg) {
       if (msg.activeModel) { state.activeModel = msg.activeModel; }
       updateModelDisplay(state.models, state.activeModel);
       break;
+    case 'mode_updated': {
+      var nextMode = ideModeFromServer(msg.mode);
+      if (nextMode) applyMode(nextMode);
+      break;
+    }
     case 'memory':
       renderMemoryChip(msg);
       break;
@@ -2467,6 +2472,15 @@ function selectMode(mode) {
   state.modeCustomized = true;
   applyMode(mode);
   closeModeDropdown();
+}
+
+function ideModeFromServer(mode) {
+  var m = String(mode || '').toLowerCase();
+  if (!m) return null;
+  if (m === 'code.team' || m === 'team' || m.indexOf('team') === 0) return 'code.team';
+  if (m === 'code.plan' || m === 'agent.plan' || m === 'plan' || m.slice(-5) === '.plan') return 'code.plan';
+  if (m === 'code.normal' || m === 'agent' || m === 'code' || m === 'normal' || m === 'execute') return 'code.normal';
+  return null;
 }
 
 function applyMode(mode) {
