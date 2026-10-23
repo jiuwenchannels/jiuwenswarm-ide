@@ -330,6 +330,28 @@ export class ChatPanel implements vscode.Disposable {
   // ──────────────────────────────────────────
   // JiuwenSwarm events → webview
   // ──────────────────────────────────────────
+  /** Parse tool-call arguments from any of the wire shapes used by the backends. */
+  private parseToolArgs(payload: Record<string, unknown>): Record<string, unknown> {
+    const toolCall = payload.tool_call as Record<string, unknown> | undefined;
+    const rawArgs = toolCall?.arguments || payload.arguments || payload.tool_input || payload.input;
+    if (typeof rawArgs === 'string') {
+      try {
+        const parsed = JSON.parse(rawArgs) as unknown;
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          return parsed as Record<string, unknown>;
+        }
+        this.debug('tool args: parsed JSON is not an object');
+      } catch {
+        this.debug('tool args: failed to parse JSON string');
+      }
+      return {};
+    }
+    if (rawArgs && typeof rawArgs === 'object' && !Array.isArray(rawArgs)) {
+      return rawArgs as Record<string, unknown>;
+    }
+    return {};
+  }
+
   private async onJiuwenMessage(msg: JiuwenMessage): Promise<void> {
     const msgType = msg.type;
     // Skip request-response protocol messages — SessionManager handles those
@@ -379,20 +401,7 @@ export class ChatPanel implements vscode.Disposable {
       if (isFileEdit) {
         // Some backends send arguments as a JSON string; without parsing it the
         // file path is lost and no rewind snapshot is taken.
-        const rawArgs = (payload.tool_call as Record<string, unknown>)?.arguments
-          || payload.tool_input
-          || payload.input
-          || {};
-        let args: Record<string, unknown> = {};
-        if (typeof rawArgs === 'string') {
-          try {
-            args = JSON.parse(rawArgs) as Record<string, unknown>;
-          } catch {
-            args = {};
-          }
-        } else if (rawArgs && typeof rawArgs === 'object') {
-          args = rawArgs as Record<string, unknown>;
-        }
+        const args = this.parseToolArgs(payload);
         const filePath = (args.file_path as string) || (args.path as string) || undefined;
 
         if (filePath) {
@@ -463,16 +472,7 @@ export class ChatPanel implements vscode.Disposable {
         || ((payload.tool_call as Record<string, unknown>)?.name as string | undefined)
         || '';
       const memberName = payload.member_name as string | undefined;
-      const rawArgs = ((payload.tool_call as Record<string, unknown>)?.arguments as unknown)
-        || (payload.arguments as unknown)
-        || (payload.tool_input as unknown)
-        || (payload.input as unknown);
-      let attrArgs: Record<string, unknown> = {};
-      if (typeof rawArgs === 'string') {
-        try { attrArgs = JSON.parse(rawArgs) as Record<string, unknown>; } catch { attrArgs = {}; }
-      } else if (rawArgs && typeof rawArgs === 'object') {
-        attrArgs = rawArgs as Record<string, unknown>;
-      }
+      const attrArgs = this.parseToolArgs(payload);
       const attrFilePath = (attrArgs['path'] as string | undefined)
         || (attrArgs['file_path'] as string | undefined);
       if (attrToolName) {
