@@ -14,10 +14,22 @@ repositories {
     }
 }
 
+// Use the reproducible JetBrains platform coordinate by default. Developers who
+// need to build against a locally installed IDE can pass
+// -PjetbrainsIdePath="C:\Program Files\JetBrains\WebStorm 2026.1" or set
+// JETBRAINS_IDE_PATH. Never commit a machine-specific absolute path.
+val localIdePath = providers.gradleProperty("jetbrainsIdePath")
+    .orElse(providers.environmentVariable("JETBRAINS_IDE_PATH"))
+
 dependencies {
     intellijPlatform {
-        // Build against the locally installed IDE so the plugin matches its platform (build 262).
-        local("C:\\Program Files\\JetBrains\\WebStorm 2026.1")
+        if (localIdePath.isPresent) {
+            local(localIdePath.get())
+        } else {
+            intellijIdea("2026.1")
+        }
+        // instrumentationTools() is no longer provided by the IntelliJ Platform
+        // Gradle plugin 2.x; instrumentation is disabled below via instrumentCode.
         bundledPlugin("com.intellij.modules.jcef")
         bundledPlugin("org.jetbrains.plugins.terminal")
     }
@@ -39,7 +51,10 @@ intellijPlatform {
         version = project.version.toString()
 
         ideaVersion {
-            sinceBuild = "262"
+            // Compile against 2026.1 but keep the install floor at 2025.3 (253):
+            // issue #5307 was caused by declaring 262 as the minimum. The APIs
+            // used here (JCEF, terminal, editor) are available on 253+.
+            sinceBuild = "253"
             untilBuild = provider { null }
         }
 
