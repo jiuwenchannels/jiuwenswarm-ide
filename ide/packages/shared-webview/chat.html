@@ -2386,13 +2386,28 @@ function updateSkills(skills) {
         (skill.trigger    ? '<div class="skill-trigger">' + escapeHtml(skill.trigger)    + '</div>' : '') +
       '</div>' +
       '<button class="skill-toggle-btn' + (enabled ? ' enabled' : '') + '" ' +
-        'onclick="toggleSkill(' + escapeHtml(JSON.stringify(skillKey(skill))) + ',' + !enabled + ')" ' +
+        'data-skill-key="' + escapeHtml(skillKey(skill)) + '" ' +
+        'data-enable="' + (!enabled ? '1' : '0') + '" ' +
         'title="' + (enabled ? 'Disable' : 'Enable') + '">' +
         (enabled ? 'ON' : 'OFF') +
       '</button>';
     el.appendChild(item);
   });
 }
+
+// Delegate the toggle click instead of embedding skill names in inline JS.
+// Names can contain quotes/HTML; data attributes go through escapeHtml().
+(function initSkillToggleDelegation() {
+  var list = document.getElementById('skills-list');
+  if (!list) return;
+  list.addEventListener('click', function(e) {
+    var btn = e.target && e.target.closest ? e.target.closest('.skill-toggle-btn') : null;
+    if (!btn || !list.contains(btn)) return;
+    var key = btn.getAttribute('data-skill-key') || '';
+    if (!key) return;
+    toggleSkill(key, btn.getAttribute('data-enable') === '1');
+  });
+})();
 
 function showSkillsError(message) {
   var msg = escapeHtml(message || 'Failed to load skills');
