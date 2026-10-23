@@ -947,7 +947,9 @@ export class ChatPanel implements vscode.Disposable {
       if (!fs.existsSync(resolved)) {
         // Bare/relative references from the model may not include the full path.
         const base = path.basename(filePath);
-        const matches = await vscode.workspace.findFiles(`**/${base}`, '**/node_modules/**', 5);
+        // Escape glob metacharacters so names like a[1].ts or foo?.txt are literal.
+        const globBase = base.replace(/([*?[\]{}()!+@\\])/g, '\\$1');
+        const matches = await vscode.workspace.findFiles(`**/${globBase}`, '**/node_modules/**', 5);
         if (matches.length === 0) {
           this.debug(`open_file: not found: ${filePath}`);
           return;

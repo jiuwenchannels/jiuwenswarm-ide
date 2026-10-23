@@ -659,22 +659,35 @@ class ChatPanel(
                 "open_file" -> {
                     val path = msg.get("path")?.asString ?: return
                     val line = msg.get("line")?.asInt ?: 0
-                    ApplicationManager.getApplication().invokeLater {
+                    // Resolve paths and query the filename index off the EDT: index
+                    // access requires a read action and must not block the UI.
+                    ApplicationManager.getApplication().executeOnPooledThread {
                         val basePath = project.basePath
-                        val resolved = if (File(path).isAbsolute || basePath == null) path
-                                       else File(basePath, path).path
-                        var vf = LocalFileSystem.getInstance().findFileByPath(resolved)
-                            ?: LocalFileSystem.getInstance().refreshAndFindFileByPath(resolved)
-                        if (vf == null) {
-                            // Bare/relative references may omit the full path.
-                            vf = FilenameIndex.getFilesByName(
-                                project, File(path).name, GlobalSearchScope.projectScope(project)
-                            ).firstOrNull()?.virtualFile
+                        val normalized = path.replace('\\', '/')
+                        val windowsAbsolute = Regex("^[A-Za-z]:/").containsMatchIn(normalized)
+                        val isAbsolute = File(path).isAbsolute || windowsAbsolute
+                        val resolved = if (isAbsolute || basePath == null) path
+                                       else File(basePath, normalized).path
+                        val vf = try {
+                            LocalFileSystem.getInstance().findFileByPath(resolved)
+                                ?: LocalFileSystem.getInstance().refreshAndFindFileByPath(resolved)
+                                ?: ReadAction.compute<com.intellij.psi.PsiFile?, Throwable> {
+                                    FilenameIndex.getFilesByName(
+                                        project,
+                                        File(normalized).name,
+                                        GlobalSearchScope.projectScope(project),
+                                    ).firstOrNull()
+                                }?.virtualFile
+                        } catch (e: Exception) {
+                            debug("open_file: lookup failed for $path: ${e.message}")
+                            null
                         }
-                        if (vf != null) {
-                            OpenFileDescriptor(project, vf, maxOf(0, line - 1), 0).navigate(true)
-                        } else {
+                        if (vf == null) {
                             debug("open_file: not found: $path")
+                            return@executeOnPooledThread
+                        }
+                        ApplicationManager.getApplication().invokeLater {
+                            OpenFileDescriptor(project, vf, maxOf(0, line - 1), 0).navigate(true)
                         }
                     }
                 }
