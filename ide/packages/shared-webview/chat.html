@@ -1736,7 +1736,6 @@ let state = {
   skills: [],
   showDebug: false,
   streaming: false,
-  stopRequested: false, // set when the user clicks ■; final turn is classified as stopped
   models: [],
   activeModel: null,
   turns: [],
@@ -2861,7 +2860,6 @@ function handleJiuwenEvent(evt) {
 // Called when we send a message — create a user turn and an empty assistant turn
 function beginTurn(requestId, userContent) {
   const msgs = document.getElementById('messages');
-  state.stopRequested = false;
 
   // User message
   const userEl = document.createElement('div');
@@ -2902,6 +2900,8 @@ function beginTurn(requestId, userContent) {
     textContent: '',
     thinkingEl: null,
     typingEl: typingEl,
+    // Set on this turn only when the user clicks the stop button.
+    stopRequested: false,
     // metrics tracking
     startTime: Date.now(),
     firstTokenTime: null,
@@ -3308,6 +3308,10 @@ function mapInterruptAnswerValue(pt, value) {
 
 function sendAnswerForInterrupt(pt, rid, source, optionValue) {
   pt.questionAnswered = true;
+  // The user chose to continue this turn, so a previous stop click no longer
+  // applies; let the resumed stream finish as completed.
+  pt.stopRequested = false;
+  pt.stopped = false;
   const statusEl = pt.pendingQuestion ? pt.pendingQuestion.querySelector('.question-status') : null;
   if (statusEl) statusEl.textContent = 'Answer sent — waiting for the agent to continue…';
   send({
@@ -3780,7 +3784,7 @@ function finalizeTurn(rid, payload) {
     pt.hasFinal = true;
     // The local stop click may race the server's final; the flag makes sure the
     // turn is still classified as stopped if the final arrives afterwards.
-    if (payload.stopped || state.stopRequested) pt.stopped = true;
+    if (payload.stopped || pt.stopRequested) pt.stopped = true;
 
     // Record the final response text as a 'final' event so the trajectory
     // shows the turn's response as its own entry. Live streaming never emits a
@@ -4262,14 +4266,16 @@ inputEl.addEventListener('input', function() {
 
 sendBtn.addEventListener('click', function() {
   if (state.streaming) {
-    state.stopRequested = true;
     send({ type: 'stop' });
     // Finalize all pending turns immediately — Gateway handles backend cancellation.
     // A turn waiting on an interrupt would otherwise keep the early-return path in
     // finalizeTurn and leave the UI stuck in streaming mode.
     Object.keys(state.pendingTurns).forEach(function(rid) {
       var pt = state.pendingTurns[rid];
-      if (pt) pt.questionAnswered = true;
+      if (pt) {
+        pt.stopRequested = true;
+        pt.questionAnswered = true;
+      }
       finalizeTurn(rid, { stopped: true });
     });
     // No live turn (e.g. it was already finalized server-side) — still release UI.
@@ -4877,7 +4883,6 @@ function clearMessages() {
   msgs.innerHTML = '';
   state.pendingTurns = {};
   state.streaming = false;
-  state.stopRequested = false;
   state.rewindable = false;
   _historyPendingAssistant = null;
   document.getElementById('input').disabled = false;
