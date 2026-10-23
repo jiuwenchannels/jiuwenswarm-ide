@@ -5148,10 +5148,20 @@ function openToolFile(ev) {
   if (path) send({ type: 'open_file', path: path, line: 0 });
 }
 
+function applyInlineEmphasis(html) {
+  // Protect code spans and file links: filenames often contain underscores,
+  // which must not be turned into <em> tags.
+  return html.split(/(<a\b[^>]*>[\s\S]*?<\/a>|<code>[\s\S]*?<\/code>)/g)
+    .map(function(part, idx) {
+      if (idx % 2 === 1) return part;
+      return part
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+        .replace(/_([^_]+)_/g, '<em>$1</em>');
+    }).join('');
+}
+
 function renderInline(line) {
-  line = line.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  line = line.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-  line = line.replace(/_([^_]+)_/g, '<em>$1</em>');
   // Pattern 1: backtick-wrapped file paths — run before generic backtick handler
   line = line.replace(/`([^`\n]+)`/g, function(_, raw) {
     var text = raw.trim();
@@ -5175,7 +5185,7 @@ function renderInline(line) {
     return '<a class="file-link" data-path="' + escapeHtml(filePath) + '" data-line="' + lineNum
          + '" onclick="openFileLink(this)">' + escapeHtml(filePath) + ':' + lineNum + '</a>';
   });
-  return line;
+  return applyInlineEmphasis(line);
 }
 
 // ─────────────────────────────────────────────
